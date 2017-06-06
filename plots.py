@@ -85,11 +85,11 @@ class histogram:
         for label in labels:
             ax.plot(NFx,NF,linestyle='-',markersize=10,marker='o',label=label)
         #ax.set_title(title)
-        ax.set_ylim([0,10])
+        ax.set_ylim([0,20])
         ax.set_xlabel('$n_F$')
         ax.set_ylabel('$<n_B(n_F)>$') if self.NBNF=='NBNF' else ax.set_ylabel('$\eta$')
         ax.grid('on')
-        ax.legend()
+        ax.legend(loc='best')
         #filename =\
         #'temp_plots/{}_eta{}_dia{}.pdf'.\
         #format(self.NBNF,ETALIM[self.dia[0][-2]][-2:],DIA[self.dia[0][:3]+self.dia[0][-1]])\
@@ -106,7 +106,7 @@ if __name__=='__main__':
     Diagrams:   1,6,10,11,21,31
     limits:     1eta5, 3eta7, 2eta6, 4eta8, 01xf, xf01   
     '''
-    DIAS = [[1,6,10]]
+    DIAS = [[11,21,31]]
     limits = [['2eta6'],['1eta5'],['3eta7'],['4eta8'],['01xf'],['xf01']]
     for NBNF in ['NBNF']:#,'NF']:
         fig,ax = plt.subplots()
