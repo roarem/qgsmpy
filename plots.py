@@ -1,7 +1,7 @@
 import matplotlib as mpl
 mpl.rc('text',usetex=True)
 mpl.rcParams['legend.numpoints']=1
-mpl.rcParams['font.size'] = 27
+mpl.rcParams['font.size'] =36
 mpl.rcParams['font.weight']   = 'bold'
 mpl.rcParams['text.latex.preamble']=[r'\usepackage{bm} \boldmath']
 mpl.rcParams['lines.linewidth'] = 5
@@ -11,10 +11,8 @@ import numpy as np
 import ROOT
 
 FILEPATH    = '/home/roar/master/qgsm_analysis_tool/qgsmpy/src/'
-F_NAME      = '900_4m.root'
-#DIAS        = ['1','6','10','11','21','31']
-ETALIM      = {'0':'1 < \\eta < 5','1':'3 < \\eta < 7','2':'2 < \\eta < 6',\
-               '3':'|x_F| \\le 0.1','4':'|x_F| \\ge 0.1'}
+ETALIM      = {'1eta5':'1 < \\eta < 5','3eta7':'3 < \\eta < 7','2eta6':'2 < \\eta < 6',\
+              '4eta8':'4 < \\eta < 8','xf01':'|x_F| \\le 0.1','01xf':'|x_F| \\ge 0.1'}
 
 class histogram:
     def __init__(self,f,LIM=[],NBNF='NF',DIAS=[]):
@@ -22,7 +20,6 @@ class histogram:
         if 'NBNF'== NBNF:
             dianbnf = DIA.format(DIAS[0],lim[0],NBNF) 
             dia     = DIA.format(DIAS[0],lim[0],'NF') 
-            print(dianbnf)
             self.th1f       = f.FindObjectAny(dianbnf) 
             self.th1fnf     = f.FindObjectAny(dia) 
             self.nb         = self.th1f.GetNbinsX()
@@ -62,39 +59,78 @@ class histogram:
                 print(nf)
                 self.th1f.Add(self.f.FindObjectAny(nf))
             
-    def draw(self,fig,ax):
+    def draw(self,fig,ax,lab_add):
         labels = []
         for l in self.LIM:
             temp_dias = [str(d) for d in self.DIAS]
-            labels.append('{0} dia: {1}'.format(l,', '.join(temp_dias)))
+            labels.append('${0}$ dia: {1}'.format(ETALIM[l],', '.join(temp_dias)))
 
-        #diagrams        = [l.split('_')[0] for l in self.dia]#['{}'.format(DIA[l[:3]+l[-1]]) for l in self.dia]
-        #limits          = [l.split('_')[1] for l in self.dia]
-        #labels          = ['{} {}'.format('{} Diagrams '.format(lim),', '.join(diagrams))\
-        #                for lim in limits]
-        #title           = '{} with ${:s}$'\
-        #                .format('$<n_B(n_F)>$'if self.NBNF else '$\eta$',ETALIM[self.dia[0][-2]])
-        #print(title)
         NF              = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
         NF              = NF[:35] if self.NBNF == 'NBNF' else NF
         self.limit[1]   = len(NF)-1 if self.NBNF=='NBNF' else self.limit[1] 
         NFx             = np.linspace(self.limit[0],self.limit[1],len(NF))
 
-        #fig,ax  = plt.subplots()
-
         for label in labels:
-            ax.plot(NFx,NF,linestyle='-',markersize=10,marker='o',label=label)
+            ax.plot(NFx,NF,linestyle='-',markersize=10,marker='o',label=label+lab_add)
         #ax.set_title(title)
-        ax.set_ylim([0,20])
+        #ax.set_ylim([0,6])
+        #ax.set_xlim([0,7])
         ax.set_xlabel('$n_F$')
         ax.set_ylabel('$<n_B(n_F)>$') if self.NBNF=='NBNF' else ax.set_ylabel('$\eta$')
         ax.grid('on')
         ax.legend(loc='best')
-        #filename =\
-        #'temp_plots/{}_eta{}_dia{}.pdf'.\
-        #format(self.NBNF,ETALIM[self.dia[0][-2]][-2:],DIA[self.dia[0][:3]+self.dia[0][-1]])\
-        #        .replace(" ","")
-        #fig.savefig(filename)
+
+    def draw_w_wo_decay(self,fig,ax,lab_add):
+        labels = []
+        linestyles = {11:'',21:'-',31:'--'}
+        #colors = {11:'black',21:'black',31:'black'}
+        colors = {11:'magenta',21:'blue',31:'red'}
+        markers= {11:'o',21:'s',31:'^'}
+        dias = self.DIAS[0]
+        markerfacecolor = 'white' if lab_add=='wo decay' else colors[dias]
+        markeredgecolor = colors[dias]
+        markeredgewidth = 3 if lab_add=='wo decay' else 0
+        linestyle       = '' if lab_add=='wo decay' else linestyles[dias]
+        zorder          = 2 if lab_add=='wo decay' else 3
+        marker = markers[dias]
+
+        label = '${0}$ dia: {1}'.format(ETALIM[self.LIM[0]],dias)
+
+        NF              = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
+        NF              = NF[:35] if self.NBNF == 'NBNF' else NF
+        self.limit[1]   = len(NF)-1 if self.NBNF=='NBNF' else self.limit[1] 
+        NFx             = np.linspace(self.limit[0],self.limit[1],len(NF))
+        NF_err          = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])[:35]
+
+
+        ax.plot(NFx,NF,linestyle=linestyle,\
+                color=colors[dias],\
+                markersize=24,\
+                marker=marker,markerfacecolor=markerfacecolor,\
+                markeredgewidth=markeredgewidth,\
+                markeredgecolor=markeredgecolor,\
+                zorder=zorder,\
+                label=label+lab_add)
+        #ax.errorbar(NFx,NF,yerr=NF_err,\
+        #            linestyle=linestyle,\
+        #            color=colors[dias],\
+        #            markersize=24,\
+        #            marker=marker,\
+        #            markerfacecolor=markerfacecolor,\
+        #            markeredgewidth=markeredgewidth,\
+        #            markeredgecolor=markeredgecolor,\
+        #            zorder=zorder,\
+        #            label=label+lab_add)
+
+        if self.LIM[0]=='01xf':
+            ax.set_ylim([0,6])
+            ax.set_xlim([0,7])
+        else:
+            ax.set_ylim([0,30])
+        ax.set_xlabel('$n_F$',fontsize=48)
+        ax.set_ylabel('$<n_B(n_F)>$',fontsize=48) if self.NBNF=='NBNF' else ax.set_ylabel('$\eta$',fontsize=48)
+        ax.grid('on')
+        ax.legend(loc='best',prop={'size':38})
 
     def close_file(self):
         self.f.Close()
@@ -106,25 +142,33 @@ if __name__=='__main__':
     Diagrams:   1,6,10,11,21,31
     limits:     1eta5, 3eta7, 2eta6, 4eta8, 01xf, xf01   
     '''
-    DIAS = [[11,21,31]]
-    limits = [['2eta6'],['1eta5'],['3eta7'],['4eta8'],['01xf'],['xf01']]
-    for NBNF in ['NBNF']:#,'NF']:
-        fig,ax = plt.subplots()
-        for i in limits:
-            for DIA in DIAS:
-                f           = ROOT.TFile(FILEPATH+F_NAME)
-                lim         = i 
-                hist        = histogram(f,lim,NBNF,DIA)
-                hist.draw(fig,ax)
-                hist.close_file()
+    #DIAS = [[11,21,31]]
+    #limits = [['2eta6'],['1eta5'],['3eta7'],['4eta8'],['01xf'],['xf01']]
+    #limits = [['01xf']]
+    #for NBNF in ['NBNF']:#,'NF']:
+    #    fig,ax = plt.subplots()
+    #    for i in limits:
+    #        for DIA in DIAS:
+    #            f           = ROOT.TFile(FILEPATH+F_NAME)
+    #            lim         = i 
+    #            hist        = histogram(f,lim,NBNF,DIA)
+    #            hist.draw(fig,ax)
+    #            hist.close_file()
+
+    fig,ax = plt.subplots()
+    DIAS = [[11],[21],[31]]
+    limits = [['01xf']]
+    #F_NAME      = ['900_4m.root','900_4m_wodr.root']
+    F_NAME      = ['900_4m.root','900_4m_wodr.root']
+    #F_NAME      = ['900_1m_wd.root']
+    for name,lab in zip(F_NAME,['w decay','wo decay']):
+        for NBNF in ['NBNF']:#,'NF']:
+            for lim in limits:
+                for DIA in DIAS:
+                    f           = ROOT.TFile(FILEPATH+name)
+                    hist        = histogram(f,lim,NBNF,DIA)
+                    hist.draw_w_wo_decay(fig,ax,lab)
+                    hist.close_file()
             
 
-    #f           = ROOT.TFile(FILEPATH+F_NAME)
-    #lim         = 0 
-    #SIN         = [0]#[0,1,2]
-    #DOU         = []#[0,1,2]
-    #NBNF        = 'NF'
-    #hist        = histogram(f,lim,NBNF,SIN,DOU)
-    #hist.draw()
-    #hist.close_file()
     plt.show()

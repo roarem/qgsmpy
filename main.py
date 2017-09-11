@@ -115,14 +115,35 @@ class Counter():
 
 
 if __name__=='__main__':
-    test = SINDOU()
     
-    test1 = Counter("/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/",\
-                    '900_4m.root',\
-                    test)
+    #sindou      = SINDOU()
+    #900_4m = Counter("/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/",\
+    #                '900_4m.root',\
+    #                sindou)
+    #900_4m.Count()
+
+    sindou_wodr = SINDOU()
+    sindou_900_4m_wodr =\
+                    Counter("/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/wo_decay/data/",\
+                    '900_4m_wodr.root',\
+                    sindou_wodr)
+    sindou_900_4m_wodr.Count()
+
+    #sindou_wod = SINDOU()
+    #sindou_900_1m_wod =\
+    #                Counter("/home/roar/DISKS/1/19-31_oct/1mln/wo_decay2/data/",\
+    #                '900_1m_wod.root',\
+    #                sindou_wod)
+    #sindou_900_1m_wod.Count()
+
+    #sindou_wd = SINDOU()
+    #sindou_900_1m_wd =\
+    #                Counter("/home/roar/DISKS/1/19-31_oct/1mln/w_decay/build/data/",\
+    #                '900_1m_wd.root',\
+    #                sindou_wd)
+    #sindou_900_1m_wd.Count()
     
     #test1 = Counter('/home/roar/DISKS/1/13000_attempts/',\
     #                '13000_4m.root',\
     #                test)
-    test1.Count()
     
