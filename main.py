@@ -14,7 +14,7 @@ class SINDOU:
         self.nbnf       = {}
         self.coun       = {}
         self.limits     = {'1eta5':[1,5],'3eta7':[3,7],'2eta6':[2,6],'4eta8':[4,8],\
-                           '01xf':[-np.inf,0.1],'xf01':[0.1,np.inf]}
+                           'xf01':[-np.inf,0.1],'01xf':[0.1,np.inf]}
         #self.names = ['1eta5','3eta7','2eta6','4eta8','01xf','xf01'] 
         titles= ['1 <eta< 5','3 <eta< 7','2 <eta< 6','4 <eta< 8','x_F < 0.1', 'x_F > 0.1']
         for idiag in self.idiags: 
@@ -25,10 +25,12 @@ class SINDOU:
         app = abs(psrap)
         for name in self.limits:
             key = '{}_{}_'.format(int(IDIAG),name)
-            if app > self.limits[name][0] and app < self.limits[name][1]:
+            comp = app if not 'xf' in name else x_F
+            if comp > self.limits[name][0] and comp < self.limits[name][1]:
                 self.nbnf[key][nbnf_index] += 1
                 self.coun[key] = 1
                 #break
+
 
     def fill(self):
         for key in self.hist_nbnf:
@@ -50,20 +52,26 @@ class SINDOU:
 
 class ETADIST:
 
-    def __init__(self,hist_input):
-        self.hist_input = hist_input
-
-    def ETA(self):
-        name,title,nb,start,stop = self.hist_input
-        th1f    = R.TH1F(name+'ETA',title,nb,start,stop)
-	th1f.Sumw2(True)
-        self.hist = th1f
+    def __init__(self,nb=3000,start=-10,stop=10):
+        self.th1f_rap   = R.TH1F('y',\
+                                 'dN/dy',\
+                                 nb,start,stop)
+        self.th1f_eta   = R.TH1F('eta',\
+                                 'dN/d\eta',\
+                                 nb,start,stop)
+        self.th1f_rap.Sumw2(True)
+        self.th1f_eta.Sumw2(True)
+    
+    def check(self,y,eta):
+        self.th1f_rap.Fill(y)
+        self.th1f_eta.Fill(eta)
 
     
 class Counter():
-    def __init__(self,path,outfile,sindou):
+    def __init__(self,path,outfile,sindou,etadist):
 	self.path       = path
         self.sindou     = sindou
+        self.etadist    = etadist
         self.outfile    = outfile
 
     def Count(self):
@@ -91,11 +99,13 @@ class Counter():
                     p_abs       = np.sqrt(PXJ*PXJ + PYJ*PYJ + PZJ*PZJ)
                     x_F         = 2*p_L/900.0 
                     ps_rap      = 0.5*np.log((p_abs+PZJ)/(p_abs-PZJ))
+                    rap         = 0.5*np.log((EPAT+PZJ)/(EPAT-PZJ))
                     nbnf_index  = 0 if ps_rap<0 else 1
                 
                     if ICHJ!=0:
                         if IDIAG in sindou_diag:
                             self.sindou.check(nbnf_index,ps_rap,IDIAG,x_F)
+                            self.etadist.check(rap,ps_rap)
 
             self.sindou.fill()
         print '\n'
@@ -111,37 +121,44 @@ class Counter():
         for key in self.sindou.hist_nf:
             self.sindou.hist_nbnf[key].Write()
             self.sindou.hist_nf  [key].Write()
+        output.cd('..')
+        output.mkdir('ETA')
+        output.cd('ETA')
+        self.etadist.th1f_rap.Write()
+        self.etadist.th1f_eta.Write()
         output.Close()
 
 
 if __name__=='__main__':
     
     #sindou      = SINDOU()
-    #900_4m = Counter("/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/",\
+    #etadist     = ETADIST()
+    #dist_900_4m = Counter("/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/",\
     #                '900_4m.root',\
-    #                sindou)
-    #900_4m.Count()
+    #                sindou,etadist)
+    #dist_900_4m.Count()
 
-    sindou_wodr = SINDOU()
-    sindou_900_4m_wodr =\
-                    Counter("/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/wo_decay/data/",\
-                    '900_4m_wodr.root',\
-                    sindou_wodr)
-    sindou_900_4m_wodr.Count()
+    #sindou_wodr = SINDOU()
+    #sindou_900_4m_wodr =\
+    #                Counter("/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/wo_decay/data/",\
+    #                '900_4m_wodr.root',\
+    #                sindou_wodr)
+    #sindou_900_4m_wodr.Count()
 
     #sindou_wod = SINDOU()
     #sindou_900_1m_wod =\
-    #                Counter("/home/roar/DISKS/1/19-31_oct/1mln/wo_decay2/data/",\
+    #                Counter("/home/roar/DISKS/1/19-31_oct/1mln/wo_decay/data/",\
     #                '900_1m_wod.root',\
     #                sindou_wod)
     #sindou_900_1m_wod.Count()
 
-    #sindou_wd = SINDOU()
-    #sindou_900_1m_wd =\
-    #                Counter("/home/roar/DISKS/1/19-31_oct/1mln/w_decay/build/data/",\
-    #                '900_1m_wd.root',\
-    #                sindou_wd)
-    #sindou_900_1m_wd.Count()
+    sindou      = SINDOU()
+    etadist     = ETADIST()
+    dist_900_1m =\
+                    Counter("/home/roar/DISKS/1/19-31_oct/1mln/w_decay/build/data/",\
+                    '900_1m.root',\
+                    sindou,etadist)
+    dist_900_1m.Count()
     
     #test1 = Counter('/home/roar/DISKS/1/13000_attempts/',\
     #                '13000_4m.root',\

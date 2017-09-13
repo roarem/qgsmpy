@@ -15,9 +15,9 @@ ETALIM      = {'1eta5':'1 < \\eta < 5','3eta7':'3 < \\eta < 7','2eta6':'2 < \\et
               '4eta8':'4 < \\eta < 8','xf01':'|x_F| \\le 0.1','01xf':'|x_F| \\ge 0.1'}
 
 class histogram:
-    def __init__(self,f,LIM=[],NBNF='NF',DIAS=[]):
+    def __init__(self,f,LIM=[],DIST='NF',DIAS=[]):
         DIA = '{0}_{1}_{2}' 
-        if 'NBNF'== NBNF:
+        if DIST=='NBNF':
             dianbnf = DIA.format(DIAS[0],lim[0],NBNF) 
             dia     = DIA.format(DIAS[0],lim[0],'NF') 
             self.th1f       = f.FindObjectAny(dianbnf) 
@@ -30,7 +30,7 @@ class histogram:
                 for d in DIAS:
                     self.dianbnf.append(DIA.format(d,l,'NBNF'))
                     self.dia    .append(DIA.format(d,l,'NF'))
-        else:
+        elif DIST=='NF':
             dia     = DIA.format(DIAS[0],lim,'NF')
             self.th1f   = f.FindObjectAny(dia) 
             self.nb     = self.th1f.GetNbinsX()
@@ -39,27 +39,37 @@ class histogram:
             for l in LIM:
                 for d in DIA:
                     self.dia.append(DIA.format(d,l,'NF'))
+        elif DIST=='Y':
+            self.th1f   = f.FindObjectAny('y')
+            self.nb     = self.th1f.GetNbinsX()
+            self.limit  = [self.th1f.GetXaxis().GetXmin(),self.th1f.GetXaxis().GetXmax()]
+        elif DIST=='ETA':
+            self.th1f   = f.FindObjectAny('eta')
+            self.nb     = self.th1f.GetNbinsX()
+            self.limit  = [self.th1f.GetXaxis().GetXmin(),self.th1f.GetXaxis().GetXmax()]
+
 
         self.f      = f 
-        self.NBNF   = NBNF
+        self.DIST   = DIST
         self.LIM    = LIM 
         self.DIAS   = DIAS
         self.adding()
 
     def adding(self):
-        if 'NBNF' == self.NBNF:
+        if self.DIST == 'NBNF':
             for nbnf,nf in zip(self.dianbnf[1:],self.dia[1:]):
                 print(nbnf)
                 self.th1f  .Add(self.f.FindObjectAny(nbnf))
                 self.th1fnf.Add(self.f.FindObjectAny(nf))
             self.th1f.Divide(self.th1fnf)
 
-        else:
+        elif self.DIST == 'NF':
             for nf in self.dia[1:]:
                 print(nf)
                 self.th1f.Add(self.f.FindObjectAny(nf))
             
-    def draw(self,fig,ax,lab_add):
+
+    def draw_nbnf(self,fig,ax,lab_add):
         labels = []
         for l in self.LIM:
             temp_dias = [str(d) for d in self.DIAS]
@@ -83,8 +93,8 @@ class histogram:
     def draw_w_wo_decay(self,fig,ax,lab_add):
         labels = []
         linestyles = {11:'',21:'-',31:'--'}
-        #colors = {11:'black',21:'black',31:'black'}
-        colors = {11:'magenta',21:'blue',31:'red'}
+        colors = {11:'black',21:'black',31:'black'}
+        #colors = {11:'magenta',21:'blue',31:'red'}
         markers= {11:'o',21:'s',31:'^'}
         dias = self.DIAS[0]
         markerfacecolor = 'white' if lab_add=='wo decay' else colors[dias]
@@ -103,24 +113,24 @@ class histogram:
         NF_err          = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])[:35]
 
 
-        ax.plot(NFx,NF,linestyle=linestyle,\
-                color=colors[dias],\
-                markersize=24,\
-                marker=marker,markerfacecolor=markerfacecolor,\
-                markeredgewidth=markeredgewidth,\
-                markeredgecolor=markeredgecolor,\
-                zorder=zorder,\
-                label=label+lab_add)
-        #ax.errorbar(NFx,NF,yerr=NF_err,\
-        #            linestyle=linestyle,\
-        #            color=colors[dias],\
-        #            markersize=24,\
-        #            marker=marker,\
-        #            markerfacecolor=markerfacecolor,\
-        #            markeredgewidth=markeredgewidth,\
-        #            markeredgecolor=markeredgecolor,\
-        #            zorder=zorder,\
-        #            label=label+lab_add)
+        #ax.plot(NFx,NF,linestyle=linestyle,\
+        #        color=colors[dias],\
+        #        markersize=24,\
+        #        marker=marker,markerfacecolor=markerfacecolor,\
+        #        markeredgewidth=markeredgewidth,\
+        #        markeredgecolor=markeredgecolor,\
+        #        zorder=zorder,\
+        #        label=label+lab_add)
+        ax.errorbar(NFx,NF,yerr=NF_err,\
+                    linestyle=linestyle,\
+                    color=colors[dias],\
+                    markersize=24,\
+                    marker=marker,\
+                    markerfacecolor=markerfacecolor,\
+                    markeredgewidth=markeredgewidth,\
+                    markeredgecolor=markeredgecolor,\
+                    zorder=zorder,\
+                    label=label+lab_add)
 
         if self.LIM[0]=='01xf':
             ax.set_ylim([0,6])
@@ -132,6 +142,13 @@ class histogram:
         ax.grid('on')
         ax.legend(loc='best',prop={'size':38})
 
+    def draw_eta(self,fig,ax):
+        Y       = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
+        Y_err   = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])
+        Y_x     = np.linspace(self.limit[0],self.limit[1],len(Y))
+
+        ax.plot(Y_x,Y)
+
     def close_file(self):
         self.f.Close()
 
@@ -142,8 +159,19 @@ if __name__=='__main__':
     Diagrams:   1,6,10,11,21,31
     limits:     1eta5, 3eta7, 2eta6, 4eta8, 01xf, xf01   
     '''
-    #DIAS = [[11,21,31]]
+    fig,ax  = plt.subplots()
+    DIAS    = [[11],[21],[31]] 
+    F_NAME      = '900_1m.root'
+    for DIA in DIAS:
+        f       = ROOT.TFile(FILEPATH+F_NAME)
+        hist    = histogram(f,DIST='ETA',DIAS=DIA)
+        hist.draw_eta(fig,ax)
+        hist.close_file()
+
+    #DIAS = [[11],[21],[31]]
+    #DIAS = [[1,6,10,11,21,31]]
     #limits = [['2eta6'],['1eta5'],['3eta7'],['4eta8'],['01xf'],['xf01']]
+    #F_NAME      = '900_1m_wd.root'
     #limits = [['01xf']]
     #for NBNF in ['NBNF']:#,'NF']:
     #    fig,ax = plt.subplots()
@@ -152,23 +180,23 @@ if __name__=='__main__':
     #            f           = ROOT.TFile(FILEPATH+F_NAME)
     #            lim         = i 
     #            hist        = histogram(f,lim,NBNF,DIA)
-    #            hist.draw(fig,ax)
+    #            hist.draw_nbnf(fig,ax,'wo decay')
     #            hist.close_file()
 
-    fig,ax = plt.subplots()
-    DIAS = [[11],[21],[31]]
-    limits = [['01xf']]
-    #F_NAME      = ['900_4m.root','900_4m_wodr.root']
-    F_NAME      = ['900_4m.root','900_4m_wodr.root']
-    #F_NAME      = ['900_1m_wd.root']
-    for name,lab in zip(F_NAME,['w decay','wo decay']):
-        for NBNF in ['NBNF']:#,'NF']:
-            for lim in limits:
-                for DIA in DIAS:
-                    f           = ROOT.TFile(FILEPATH+name)
-                    hist        = histogram(f,lim,NBNF,DIA)
-                    hist.draw_w_wo_decay(fig,ax,lab)
-                    hist.close_file()
+    #fig,ax = plt.subplots()
+    #DIAS = [[11],[21],[31]]
+    #limits = [['01xf']]
+    ##F_NAME      = ['900_4m.root','900_4m_wodr.root']
+    #F_NAME      = ['900_1m_wd.root','900_1m_wod.root']
+    ##F_NAME      = ['900_1m_wd.root']
+    #for name,lab in zip(F_NAME,['w decay','wo decay']):
+    #    for NBNF in ['NBNF']:#,'NF']:
+    #        for lim in limits:
+    #            for DIA in DIAS:
+    #                f           = ROOT.TFile(FILEPATH+name)
+    #                hist        = histogram(f,lim,NBNF,DIA)
+    #                hist.draw_w_wo_decay(fig,ax,lab)
+    #                hist.close_file()
             
 
     plt.show()
