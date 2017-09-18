@@ -48,6 +48,8 @@ class SINDOU:
         th1fnf      = R.TH1F(name+'NF',title,nb,start,stop) 
 	th1fnbnf.Sumw2(True)
 	th1fnf  .Sumw2(True)
+	th1fnbnf.Get._creates = True
+	th1fnf  .Get._creates = True
         self.hist_nbnf[name] = th1fnbnf
         self.hist_nf[name] = th1fnf
         self.nbnf[name] = [0,0]
@@ -55,19 +57,27 @@ class SINDOU:
 
 class ETADIST:
 
-    def __init__(self,nb=300,start=-10,stop=10):
-        self.th1f_rap   = R.TH1F('y',\
-                                 'dN/dy',\
-                                 nb,start,stop)
-        self.th1f_eta   = R.TH1F('eta',\
-                                 'dN/d\eta',\
-                                 nb,start,stop)
-        self.th1f_rap.Sumw2(True)
-        self.th1f_eta.Sumw2(True)
+    def __init__(self,nb=1000,start=-10,stop=10):
+        idiags = ['1','6','10','11','21','31']
+        self.th1f_rap = {}
+        self.th1f_eta = {}
+        for dia in idiags:
+            self.th1f_rap['y_{}'.format(dia)] = R.TH1F('y_{}'.format(dia),\
+                                                       'dN/dy {}'.format(dia),\
+                                                       nb,start,stop)
+            self.th1f_eta['eta_{}'.format(dia)] = R.TH1F('eta_{}'.format(dia),\
+                                                       'dN/d\eta {}'.format(dia),\
+                                                       nb,start,stop)
+            self.th1f_rap['y_{}'.format(dia)]   .Get._creates = True
+            self.th1f_eta['eta_{}'.format(dia)] .Get._creates = True
+            self.th1f_rap['y_{}'.format(dia)]   .Sumw2(True)
+            self.th1f_eta['eta_{}'.format(dia)] .Sumw2(True)
+
     
-    def check(self,y,eta):
-        self.th1f_rap.Fill(y)
-        self.th1f_eta.Fill(eta)
+    def fill(self,y,eta,IDIAG):
+        IDIAG=int(IDIAG)
+        self.th1f_rap['y_{}'.format(IDIAG)].Fill(y)
+        self.th1f_eta['eta_{}'.format(IDIAG)].Fill(eta)
 
     
 class Counter():
@@ -92,23 +102,21 @@ class Counter():
                 FREEZJ,XXJ,YYJ,ZZJ,EPAT,PXJ,PYJ,PZJ,AMJ,IDENT,IDIAG,IBJ,ISJ,ICHJ,TFORMJ,\
                     XXJI,YYJI,ZZJI,IORGJ,TFORMRJUK = \
                     np.fromfile(finalpr,count=20)
-                    #[float(v) for v in finalpr.readline().strip().split()]
                 if i==0 and IDIAG==4:
                     np.fromfile(finalpr,count=20)
-                    #finalpr.readline()
                     break
                 else:
-                    p_L         = np.sqrt(PXJ*PXJ + PYJ*PYJ)
+                    p_T         = np.sqrt(PXJ*PXJ + PYJ*PYJ)
                     p_abs       = np.sqrt(PXJ*PXJ + PYJ*PYJ + PZJ*PZJ)
-                    x_F         = 2*p_L/900.0 
-                    ps_rap      = 0.5*np.log((p_abs+PZJ)/(p_abs-PZJ))
+                    x_F         = 2*p_T/900.0 
                     rap         = 0.5*np.log((EPAT+PZJ)/(EPAT-PZJ))
+                    #rap         = 0.5*np.log(EPAT+PZJ)/np.sqrt(PXJ**2+PYJ**2+AMJ**2)
+                    ps_rap      = 0.5*np.log((p_abs+PZJ)/(p_abs-PZJ))
                     nbnf_index  = 0 if ps_rap<0 else 1
                 
-                    if ICHJ!=0:
-                        if IDIAG in sindou_diag:
-                            self.sindou.check(nbnf_index,ps_rap,IDIAG,x_F)
-                            self.etadist.check(rap,ps_rap)
+                    if ICHJ!=0 and IDIAG in sindou_diag:
+                        self.sindou.check(nbnf_index,ps_rap,IDIAG,x_F)
+                        self.etadist.fill(rap,ps_rap,IDIAG)
 
             self.sindou.fill()
         print '\n'
@@ -127,25 +135,31 @@ class Counter():
         output.cd('..')
         output.mkdir('ETA')
         output.cd('ETA')
-        self.etadist.th1f_rap.Write()
-        self.etadist.th1f_eta.Write()
+        for rap_key,eta_key in zip(self.etadist.th1f_rap,self.etadist.th1f_eta):
+            self.etadist.th1f_rap[rap_key].Write()
+            self.etadist.th1f_eta[eta_key].Write()
         output.Close()
         print('Written to {}'.format(self.outfile))
 
 
 if __name__=='__main__':
-    
 
-    path    = ["/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/"]
-    out     = ['900_4m.root']
-    #path    = [\
-    #           '/home/roar/DISKS/1/13000_attempts/'\
-    #           #'/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/7000/build/data/'\
-    #          ]
-    #out     = [\
-    #           '13000_4m.root',\
-    #           '7000_4m.root'\
-    #          ]
+    #path    = ["/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/"]
+    #out     = ['900_4m.root']
+    #path    = ["/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/7000/build/data/"]
+    #out     = ['7000_4m.root']
+    path    = [\
+               '/home/roar/DISKS/1/13000_attempts/',\
+               '/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/7000/build/data/',\
+               '/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/'\
+              ]
+    out     = [\
+               '13000_4m.root',\
+               '7000_4m.root',\
+               '900_4m.root'\
+              ]
+    #path    = ["/home/roar/DISKS/1/19-31_oct/1mln/w_decay/build/data/"]
+    #out     = ['900_1m.root']
 
     for pa,ou in zip(path,out):
         sindou  = SINDOU()
