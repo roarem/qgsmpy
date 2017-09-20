@@ -90,7 +90,8 @@ class histogram:
             labels.append('${0}$ dia: {1}'.format(ETALIM[l],', '.join(temp_dias)))
 
         NF              = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
-        NF_err          = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])[:35]
+        NF_err          = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])
+        NF_err          = NF_err[:35] if self.DIST == 'NBNF' else NF_err
         NF              = NF[:35] if self.DIST == 'NBNF' else NF
         self.limit[1]   = len(NF)-1 if self.DIST =='NBNF' else self.limit[1] 
         NFx             = np.linspace(self.limit[0],self.limit[1],len(NF))
@@ -193,7 +194,7 @@ class histogram:
         ax.set_ylabel('$\\frac{dN}{dy/\eta}$',rotation=0)
         ax.legend(loc=9,prop={'size':38})
 
-    def draw_eta_wwo_resdec_900_13000(self,fig,ax,index,title):
+    def draw_eta_900_7000_13000(self,fig,ax,index,title):
         Y       = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
         Y_err   = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])
         Y_x     = np.linspace(self.limit[0],self.limit[1],len(Y))
@@ -202,7 +203,7 @@ class histogram:
 
         #if title=='900':
         #    ax[index].yaxis.tick_right()
-        ax[index].annotate('${}$ GeV'.format(title),xy=(2,1e5))
+        #ax[index].annotate('${}$ GeV'.format(title),xy=(2,1e5))
         #if index==1:
         ax[index].ticklabel_format(style='sci', axis='y', scilimits=(0,0))
         #ax[index].set_title('${}$ GeV'.format(title))
@@ -256,23 +257,24 @@ if __name__=='__main__':
         fig = plt.figure()
         ax = Grid(fig, rect=111, nrows_ncols=(3,1),\
                     axes_pad=0.40)
-        DIAS    = [[21]] 
+        DIAS    = [[11]] 
         LABELS  = ['900','7000','13000']
+        #F_NAME  = ['900_4m_test.root','7000_4m_test.root','13000_4m_test.root']
         F_NAME  = ['900_4m.root','7000_4m.root','13000_4m.root']
-        DISTS   = ['Y','ETA']
+        DISTS   = ['Y']
         for i,(name,lab) in enumerate(zip(F_NAME,LABELS)):
             for dist in DISTS:
                 for DIA in DIAS:
                     f       = ROOT.TFile(FILEPATH+name)
                     hist    = histogram(f,DIST=dist,DIAS=DIA)
-                    hist.draw_eta_wwo_resdec_900_13000(fig,ax,i,lab)
+                    hist.draw_eta_900_7000_13000(fig,ax,i,lab)
                     hist.close_file()
     
     elif choice==2:
-        DIAS = [[1],[6],[21],[31]]
-        #DIAS = [[31]]#,6,10,11,21,31]]
+        #DIAS = [[1],[6],[21],[31]]
+        DIAS = [[31]]#,6,10,11,21,31]]
         #limits = [['2eta6','1eta5','3eta7','4eta8']]#,['01xf'],['xf01']]
-        limits = [['all']]
+        limits = [['01xf']]
         F_NAME      = ['900_1m.root','900_1m_wod.root']
         fig,ax = plt.subplots()
         for name,labl in zip(F_NAME,['w decay','wo decay']):
@@ -300,7 +302,5 @@ if __name__=='__main__':
                         hist        = histogram(f,lim,NBNF,DIA)
                         hist.draw_w_wo_decay(fig,ax,lab)
                         hist.close_file()
-
-           
 
     plt.show()

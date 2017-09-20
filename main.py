@@ -48,8 +48,8 @@ class SINDOU:
         th1fnf      = R.TH1F(name+'NF',title,nb,start,stop) 
 	th1fnbnf.Sumw2(True)
 	th1fnf  .Sumw2(True)
-	th1fnbnf.Get._creates = True
-	th1fnf  .Get._creates = True
+	#th1fnbnf.Get._creates = True
+	#th1fnf  .Get._creates = True
         self.hist_nbnf[name] = th1fnbnf
         self.hist_nf[name] = th1fnf
         self.nbnf[name] = [0,0]
@@ -57,7 +57,7 @@ class SINDOU:
 
 class ETADIST:
 
-    def __init__(self,nb=1000,start=-10,stop=10):
+    def __init__(self,nb=10000,start=-10,stop=10):
         idiags = ['1','6','10','11','21','31']
         self.th1f_rap = {}
         self.th1f_eta = {}
@@ -68,8 +68,8 @@ class ETADIST:
             self.th1f_eta['eta_{}'.format(dia)] = R.TH1F('eta_{}'.format(dia),\
                                                        'dN/d\eta {}'.format(dia),\
                                                        nb,start,stop)
-            self.th1f_rap['y_{}'.format(dia)]   .Get._creates = True
-            self.th1f_eta['eta_{}'.format(dia)] .Get._creates = True
+            #self.th1f_rap['y_{}'.format(dia)]   .Get._creates = True
+            #self.th1f_eta['eta_{}'.format(dia)] .Get._creates = True
             self.th1f_rap['y_{}'.format(dia)]   .Sumw2(True)
             self.th1f_eta['eta_{}'.format(dia)] .Sumw2(True)
 
@@ -150,13 +150,13 @@ if __name__=='__main__':
     #out     = ['7000_4m.root']
     path    = [\
                '/home/roar/DISKS/1/13000_attempts/',\
-               '/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/7000/build/data/',\
-               '/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/'\
+               '/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/7000/build/data/'\
+               #'/home/roar/DISKS/1/19-31_oct/4mln/code_recieved_2810/900/build/data/'\
               ]
     out     = [\
-               '13000_4m.root',\
-               '7000_4m.root',\
-               '900_4m.root'\
+               '13000_4m_test.root',\
+               '7000_4m_test.root'\
+               #'900_4m_test.root'\
               ]
     #path    = ["/home/roar/DISKS/1/19-31_oct/1mln/w_decay/build/data/"]
     #out     = ['900_1m.root']
