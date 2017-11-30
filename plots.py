@@ -11,9 +11,10 @@ import numpy as np
 import ROOT
 
 FILEPATH    = '/home/roar/master/qgsm_analysis_tool/qgsmpy/src/'
-ETALIM      = {'1eta5':'1 < \\eta < 5','3eta7':'3 < \\eta < 7','2eta6':'2 < \\eta < 6',\
-              '4eta8':'4 < \\eta < 8','xf01':'|x_F| \\le 0.1','01xf':'|x_F| \\ge 0.1',\
-              'all':'all'}
+ETALIM      = {'1eta5':'1 < |\\eta| < 5','3eta7':'3 < |\\eta| < 7','2eta6':'2 < |\\eta| < 6',\
+               '4eta8':'4 < |\\eta| < 8','02eta08':'0.2 < |\\eta| < 0.8',\
+               'xf01':'|x_F| \\le 0.1','01xf':'|x_F| \\ge 0.1',\
+               'all':'all'}
 
 class histogram:
     def __init__(self,f,LIM=[],DIST='NF',DIAS=[]):
@@ -31,6 +32,7 @@ class histogram:
                 for d in DIAS:
                     self.dianbnf.append(DIA.format(d,l,'NBNF'))
                     self.dia    .append(DIA.format(d,l,'NF'))
+
         elif DIST=='NF':
             dia     = DIA.format(DIAS[0],lim,'NF')
             self.th1f   = f.FindObjectAny(dia) 
@@ -40,6 +42,7 @@ class histogram:
             for l in LIM:
                 for d in DIAS:
                     self.dia.append(DIA.format(d,l,'NF'))
+
         elif DIST=='Y':
             self.th1f_list = []
             for dia in DIAS:
@@ -48,6 +51,7 @@ class histogram:
             self.th1f   = f.FindObjectAny('y_{}'.format(DIAS[0]))
             self.nb     = self.th1f.GetNbinsX()
             self.limit  = [self.th1f.GetXaxis().GetXmin(),self.th1f.GetXaxis().GetXmax()]
+
         elif DIST=='ETA':
             self.th1f_list = []
             for dia in DIAS:
@@ -234,16 +238,16 @@ if __name__=='__main__':
 
     '''
     Diagrams:   1,6,10,11,21,31
-    limits:     1eta5, 3eta7, 2eta6, 4eta8, 01xf, xf01   
+    limits:     all,1eta5, 3eta7, 2eta6, 4eta8, 0.2eta0.8, 01xf, xf01   
     '''
 
-    choice = 1
+    choice = 4
 
     if choice==0:
         fig,ax  = plt.subplots(1,sharex=True)
-        DIAS    = [[11,21,31]] 
-        LABEL   = '900'#,'13000']
-        F_NAME  = '900_1m.root'#,'13000_4m.root']
+        DIAS    = [[1,6,10,11,21,31]] 
+        LABEL   = '13000'
+        F_NAME  = '13000_4m.root'
         DISTS   = ['Y','ETA']
         for dist in DISTS:
             for DIA in DIAS:
@@ -272,10 +276,10 @@ if __name__=='__main__':
     
     elif choice==2:
         #DIAS = [[1],[6],[21],[31]]
-        DIAS = [[31]]#,6,10,11,21,31]]
-        #limits = [['2eta6','1eta5','3eta7','4eta8']]#,['01xf'],['xf01']]
-        limits = [['01xf']]
-        F_NAME      = ['900_1m.root','900_1m_wod.root']
+        DIAS = [[1,6,10],[11,21,31]]
+        #limits = [['2eta6'],['1eta5'],['3eta7'],['4eta8']]#,['01xf'],['xf01']]
+        limits = [['all'],['02eta08']]#,['01xf'],['xf01']]
+        F_NAME = ['900_1m_2.root']#,'900_1m_wod_2.root']
         fig,ax = plt.subplots()
         for name,labl in zip(F_NAME,['w decay','wo decay']):
             for NBNF in ['NBNF']:#,'NF']:
@@ -302,5 +306,20 @@ if __name__=='__main__':
                         hist        = histogram(f,lim,NBNF,DIA)
                         hist.draw_w_wo_decay(fig,ax,lab)
                         hist.close_file()
+    elif choice==4:
+        fig,ax  = plt.subplots()
+        DIAS    = [[1,6,10,11,21,31]]
+        limits  = [['all'],['02eta08']]
+        #F_NAME  = ['13000_4m_test.root']
+        F_NAME  = ['900_1m_2.root']
+        lab     = ''
+        for NBNF in ['NBNF']:#,'NF']:
+            for lim in limits:
+                for DIA in DIAS:
+                    f           = ROOT.TFile(FILEPATH+F_NAME[0])
+                    hist        = histogram(f,lim,NBNF,DIA)
+                    hist.draw_nbnf(fig,ax,lab)
+                    hist.close_file()
+
 
     plt.show()
