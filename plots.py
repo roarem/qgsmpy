@@ -1,10 +1,10 @@
 import matplotlib as mpl
 mpl.rc('text',usetex=True)
 mpl.rcParams['legend.numpoints']=1
-mpl.rcParams['font.size'] =36
+mpl.rcParams['font.size'] = 27
 mpl.rcParams['font.weight']   = 'bold'
 mpl.rcParams['text.latex.preamble']=[r'\usepackage{bm} \boldmath']
-mpl.rcParams['lines.linewidth'] = 2
+mpl.rcParams['lines.linewidth'] = 3
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
@@ -130,20 +130,14 @@ class histogram:
         ax.legend(loc='best')
 
     def draw_w_wo_decay(self,fig,ax,lab_add):
-        labels = ['']
-        linestyles = {11:'',21:'-',31:'--'}
-        colors = {11:'black',21:'black',31:'black'}
-        #colors = {11:'magenta',21:'blue',31:'red'}
-        markers= {11:'o',21:'s',31:'^'}
-        dias = self.DIAS[0]
-        markerfacecolor = 'white' if lab_add=='wo decay' else colors[dias]
-        markeredgecolor = colors[dias]
-        markeredgewidth = 3 if lab_add=='wo decay' else 0
-        linestyle       = '' if lab_add=='wo decay' else linestyles[dias]
-        zorder          = 2 if lab_add=='wo decay' else 3
-        marker = markers[dias]
+        #markerfacecolor = 'white' if lab_add=='wo decay' else colors[dias]
+        #markeredgecolor = colors[dias]
+        #markeredgewidth = 3 if lab_add=='wo decay' else 0
+        #linestyle       = '' if lab_add=='wo decay' else linestyles[dias]
+        #zorder          = 2 if lab_add=='wo decay' else 3
+        #marker = markers[dias]
 
-        label = '${0}$ dia: {1}'.format(ETALIM[self.LIM[0]],dias)
+        #label = '${0}$ dia: {1}'.format(ETALIM[self.LIM[0]],dias)
 
         NF              = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
         NF              = NF[:35] if self.DIST == 'NBNF' else NF
@@ -151,40 +145,27 @@ class histogram:
         NFx             = np.linspace(self.limit[0],self.limit[1],len(NF))
         NF_err          = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])[:35]
 
-
-        #ax.plot(NFx,NF,linestyle=linestyle,\
-        #        color=colors[dias],\
-        #        markersize=24,\
-        #        marker=marker,markerfacecolor=markerfacecolor,\
-        #        markeredgewidth=markeredgewidth,\
-        #        markeredgecolor=markeredgecolor,\
-        #        zorder=zorder,\
-        #        label=label+lab_add)
-        NF[18] = None if dias==31 and lab_add=='wo decay' else NF[18]
-        NF_err[18] = None if dias==31 and lab_add=='wo decay' else NF_err[18]
-
+        #NF[18] = None if dias==31 and lab_add=='wo decay' else NF[18]
+        #NF_err[18] = None if dias==31 and lab_add=='wo decay' else NF_err[18]
         ax.errorbar(
                     NFx,NF,yerr=NF_err,\
-                    linestyle=linestyle,\
-                    color=colors[dias],\
-                    markersize=24,\
-                    marker=marker,\
-                    markerfacecolor=markerfacecolor,\
-                    markeredgewidth=markeredgewidth,\
-                    markeredgecolor=markeredgecolor,\
-                    zorder=zorder,\
-                    label=label+lab_add\
+                    linestyle='--',\
+                    color='black',\
+                    markersize=22,\
+                    marker='o',\
+                    markerfacecolor=markerfacecolors[lab],\
+                    markeredgewidth=3,\
+                    #markeredgecolor=markeredgecolor,\
+                    #zorder=zorder,\
+                    label=lab_add\
                     )
 
-        if self.LIM[0]=='01xf':
-            ax.set_ylim([0,6])
-            ax.set_xlim([0,7])
-        else:
-            ax.set_ylim([0,30])
+        ax.set_ylim([0,15])
+        ax.set_xlim([0,15])
         ax.set_xlabel('$n_F$',fontsize=48)
         ax.set_ylabel('$<n_B(n_F)>$',fontsize=48) if self.DIST=='NBNF' else ax.set_ylabel('$\eta$',fontsize=48)
         ax.grid('on')
-        ax.legend(loc='best',prop={'size':38})
+        ax.legend(handles=handles,loc='best',prop={'size':38})
 
     def draw_eta(self,fig,ax,title):
         Y       = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
@@ -230,9 +211,138 @@ class histogram:
                     size=36,weight='bold')
             plt.subplots_adjust(left=0.15)
 
+    def diffraction_events(self,fig,ax,lab_add):
+        #labels = []
+        #for l in self.LIM:
+        #    temp_dias = [str(d) for d in self.DIAS]
+        #    labels.append('${0}$ dia: {1}'.format(ETALIM[l],', '.join(temp_dias)))
+
+        if 'all' in self.LIM:
+            label = 'Full phase space'
+            marker = 'o'
+        else:
+            label = '${}$'.format(ETALIM[self.LIM[0]])
+            marker = '^'
+        NF = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
+        NF_err = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])
+        NF_err = NF_err[:35] if self.DIST == 'NBNF' else NF_err
+        NF = NF[:35] if self.DIST == 'NBNF' else NF
+        self.limit[1] = len(NF)-1 if self.DIST =='NBNF' else self.limit[1] 
+        NFx = np.linspace(self.limit[0],self.limit[1],len(NF))
+
+    
+        ax.plot(NFx,NF,\
+                linestyle='--',\
+                color='black',\
+                marker=marker,\
+                markersize=16,\
+                label=label)
+        #ax.set_title(title)
+        #ax.set_ylim([0,6])
+        #ax.set_xlim([0,7])
+        ax.set_xlabel('$n_F$')
+        ax.set_ylabel('$<n_B(n_F)>$') if self.DIST=='NBNF' else ax.set_ylabel('$\eta$')
+        ax.grid('on')
+        ax.legend(handles=handles,loc=2)
+
+    def long_short(self,fig,ax,lab_add):
+        #labels = []
+        #for l in self.LIM:
+        #    temp_dias = [str(d) for d in self.DIAS]
+        #    labels.append('${0}$ dia: {1}'.format(ETALIM[l],', '.join(temp_dias)))
+
+        if 'xf01' in self.LIM:
+            label = '${}$'.format(ETALIM[self.LIM[0]])
+            marker = 'o'
+        else:
+            label = '${}$'.format(ETALIM[self.LIM[0]])
+            marker = '^'
+        NF = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
+        NF_err = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])
+        NF_err = NF_err[:35] if self.DIST == 'NBNF' else NF_err
+        NF = NF[:35] if self.DIST == 'NBNF' else NF
+        self.limit[1] = len(NF)-1 if self.DIST =='NBNF' else self.limit[1] 
+        NFx = np.linspace(self.limit[0],self.limit[1],len(NF))
+
+    
+        ax.plot(NFx,NF,\
+                linestyle='--',\
+                color='black',\
+                marker=marker,\
+                markersize=22,\
+                label=label)
+        #ax.set_title(title)
+        ax.set_ylim([0,15])
+        ax.set_xlim([0,10])
+        ax.set_xlabel('$n_F$')
+        ax.set_ylabel('$<n_B(n_F)>$') if self.DIST=='NBNF' else ax.set_ylabel('$\eta$')
+        ax.grid('on')
+        ax.legend(handles=handles,loc=2)
+
+    def eta_limits(self,fig,ax,markers):
+
+        marker = markers[self.LIM[0]]        
+        label = ''
+        NF = np.asarray([self.th1f.GetBinContent(i) for i in range(1,self.nb+1)])
+        NF_err = np.asarray([self.th1f.GetBinError(i) for i in range(1,self.nb+1)])
+        NF_err = NF_err[:35] if self.DIST == 'NBNF' else NF_err
+        NF = NF[:35] if self.DIST == 'NBNF' else NF
+        self.limit[1] = len(NF)-1 if self.DIST =='NBNF' else self.limit[1] 
+        NFx = np.linspace(self.limit[0],self.limit[1],len(NF))
+
+    
+        ax.plot(NFx,NF,\
+                linestyle='--',\
+                color='black',\
+                marker=marker,\
+                markersize=22,\
+                label=label)
+        #ax.set_title(title)
+        ax.set_ylim([0,7])
+        ax.set_xlim([0,18])
+        ax.set_xlabel('$n_F$')
+        ax.set_ylabel('$<n_B(n_F)>$') if self.DIST=='NBNF' else ax.set_ylabel('$\eta$')
+        ax.grid('on')
+        ax.legend(handles=handles,loc=2)
+
     def close_file(self):
         self.f.Close()
 
+def diff_plot_setup():
+    majorLocator = ticker.MultipleLocator(5)
+    minorLocator = ticker.MultipleLocator(1)
+
+    fig, ax = plt.subplots()
+    size = 1000
+
+    DPI = fig.get_dpi()
+    fig.set_size_inches(size/DPI,size/DPI)
+    ax.set_xlim(0,12)
+    ax.set_ylim(0,13)
+    #x0,x1 = ax.get_xlim()
+    #y0,y1 = ax.get_ylim()
+    #ax.set_aspect((x1-x0)/(y1-y0))
+
+    ax.grid(which='minor',alpha=0.5)
+
+    majorFormatter = ticker.FormatStrFormatter('%d')
+    minorFormatter = ticker.FormatStrFormatter('%d')
+    ax.yaxis.set_minor_locator(minorLocator)
+    ax.xaxis.set_minor_locator(minorLocator)
+    ax.yaxis.set_major_locator(majorLocator)
+    ax.xaxis.set_major_locator(majorLocator)
+    ax.xaxis.set_major_formatter(majorFormatter)
+    #ax.xaxis.set_minor_formatter(minorFormatter)
+
+    [tick.label.set_fontsize(20) for tick in ax.xaxis.get_major_ticks()]
+    [tick.label.set_fontsize(20) for tick in ax.yaxis.get_major_ticks()]
+
+    ax.xaxis.set_tick_params(which='major',length=12,width=4)
+    ax.yaxis.set_tick_params(which='major',length=12,width=4)
+    ax.xaxis.set_tick_params(which='minor',length=8 ,width=2)
+    ax.yaxis.set_tick_params(which='minor',length=8 ,width=2)
+
+    return fig,ax
             
 if __name__=='__main__':
 
@@ -241,7 +351,7 @@ if __name__=='__main__':
     limits:     all,1eta5, 3eta7, 2eta6, 4eta8, 0.2eta0.8, 01xf, xf01   
     '''
 
-    choice = 4
+    choice = 3
 
     if choice==0:
         fig,ax  = plt.subplots(1,sharex=True)
@@ -276,10 +386,11 @@ if __name__=='__main__':
     
     elif choice==2:
         #DIAS = [[1],[6],[21],[31]]
-        DIAS = [[1,6,10],[11,21,31]]
-        #limits = [['2eta6'],['1eta5'],['3eta7'],['4eta8']]#,['01xf'],['xf01']]
-        limits = [['all'],['02eta08']]#,['01xf'],['xf01']]
-        F_NAME = ['900_1m_2.root']#,'900_1m_wod_2.root']
+        DIAS = [[1,6,10,11,21,31]]
+        limits = [['2eta6'],['3eta7'],['4eta8']]#,['01xf'],['xf01']]
+        #limits = [['all'],['02eta08']]#,['01xf'],['xf01']]
+        F_NAME = ['900_1m_2.root']
+        #F_NAME = ['900_1m_wod_2.root']
         fig,ax = plt.subplots()
         for name,labl in zip(F_NAME,['w decay','wo decay']):
             for NBNF in ['NBNF']:#,'NF']:
@@ -293,12 +404,17 @@ if __name__=='__main__':
 
     elif choice==3:
         fig,ax = plt.subplots()
-        DIAS = [[11],[21],[31]]
-        limits = [['xf01']]
-        #F_NAME      = ['900_4m.root','900_4m_wodr.root']
-        F_NAME      = ['900_1m_wd.root','900_1m_wod.root']
-        #F_NAME      = ['900_1m_wd.root']
-        for name,lab in zip(F_NAME,['w decay','wo decay']):
+        DIAS = [[11,21,31]]
+        limits = [['all']]
+        F_NAME      = ['900_1m_2.root','900_1m_wod.root']
+        labels = ['With decay','Without decay']
+        markerfacecolors = {'With decay':'black','Without decay':'white'}
+        handle = lambda lab: mpl.lines.Line2D([],[],color='black',\
+                              marker='o',markersize=22,linestyle='',\
+                              markerfacecolor=markerfacecolors[lab],\
+                              label=lab)
+        handles = [handle(lab) for lab in labels]
+        for name,lab in zip(F_NAME,['With decay','Without decay']):
             for NBNF in ['NBNF']:#,'NF']:
                 for lim in limits:
                     for DIA in DIAS:
@@ -321,5 +437,63 @@ if __name__=='__main__':
                     hist.draw_nbnf(fig,ax,lab)
                     hist.close_file()
 
+    elif choice==5:
+        fig,ax  = diff_plot_setup()
+        handles = [mpl.lines.Line2D([],[],color='black',marker='o',\
+                                        markersize=16,linestyle='',\
+                                        label='Full phase space'),\
+                   mpl.lines.Line2D([],[],color='black',marker='^',\
+                                        markersize=16,linestyle='',\
+                                        label='${}$'.format(ETALIM['02eta08']))]
+        DIAS    = [[1,6,10,11,21,31]]
+        limits  = [['all'],['02eta08']]
+        #F_NAME  = ['13000_4m_test.root']
+        F_NAME  = ['900_1m_2.root']
+        lab     = ''
+        for NBNF in ['NBNF']:#,'NF']:
+            for lim in limits:
+                for DIA in DIAS:
+                    f           = ROOT.TFile(FILEPATH+F_NAME[0])
+                    hist        = histogram(f,lim,NBNF,DIA)
+                    hist.diffraction_events(fig,ax,lab)
+                    hist.close_file()
 
+    elif choice==6:
+        fig,ax  = plt.subplots()
+        handles = [mpl.lines.Line2D([],[],color='black',marker='o',\
+                                        markersize=22,linestyle='',\
+                                        label='$x_F<0.1$'),\
+                   mpl.lines.Line2D([],[],color='black',marker='^',\
+                                        markersize=22,linestyle='',\
+                                        label='$x_F>0.1$')]
+        DIAS    = [[1,6,10,11,21,31]]
+        limits  = [['xf01'],['01xf']]
+        #F_NAME  = ['13000_4m_test.root']
+        F_NAME  = ['900_1m_2.root']
+        lab     = ''
+        for NBNF in ['NBNF']:#,'NF']:
+            for lim in limits:
+                for DIA in DIAS:
+                    f           = ROOT.TFile(FILEPATH+F_NAME[0])
+                    hist        = histogram(f,lim,NBNF,DIA)
+                    hist.long_short(fig,ax,lab)
+                    hist.close_file()
+    elif choice==7:
+        handle = lambda mark: mpl.lines.Line2D([],[],color='black',\
+                              marker=markers[mark],markersize=22,linestyle='',\
+                              label='${}$'.format(ETALIM[mark]))
+        fig,ax  = plt.subplots()
+        limits = [['1eta5'],['2eta6'],['3eta7'],['4eta8']]
+        markers = {'1eta5':'D','2eta6':'o','3eta7':'^','4eta8':'*'}
+        handles = [handle(limit[0]) for limit in limits]
+        DIAS = [[1,6,10,11,21,31]]
+        F_NAME = ['900_1m_2.root']
+        lab     = ''
+        for NBNF in ['NBNF']:#,'NF']:
+            for lim in limits:
+                for DIA in DIAS:
+                    f           = ROOT.TFile(FILEPATH+F_NAME[0])
+                    hist        = histogram(f,lim,NBNF,DIA)
+                    hist.eta_limits(fig,ax,markers)
+                    hist.close_file()
     plt.show()
